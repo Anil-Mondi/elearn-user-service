@@ -3,6 +3,7 @@ package com.cts.elearn.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,9 @@ import com.cts.elearn.exception.UserNotFoundException;
 import com.cts.elearn.repository.UserRepository;
 import com.cts.elearn.security.JwtUtil;
 
+
 @Service
+@Profile("prod")
 public class UserService {
 
     private final UserRepository userRepository;
