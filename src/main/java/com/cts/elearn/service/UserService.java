@@ -3,7 +3,7 @@ package com.cts.elearn.service;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,7 @@ import com.cts.elearn.security.JwtUtil;
 
 
 @Service
-@Profile("prod")
+@AllArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
@@ -29,15 +29,15 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public UserService(UserRepository userRepository,
-                       DomainEventPublisher eventPublisher,
-                       BCryptPasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.eventPublisher = eventPublisher;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
+//    public UserService(UserRepository userRepository,
+//                       DomainEventPublisher eventPublisher,
+//                       BCryptPasswordEncoder passwordEncoder,
+//                       JwtUtil jwtUtil) {
+//        this.userRepository = userRepository;
+//        this.eventPublisher = eventPublisher;
+//        this.passwordEncoder = passwordEncoder;
+//        this.jwtUtil = jwtUtil;
+//    }
 
     // REGISTER
     public User registerUser(User user) {

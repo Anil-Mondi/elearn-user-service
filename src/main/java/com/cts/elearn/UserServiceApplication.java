@@ -2,14 +2,10 @@ package com.cts.elearn;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@SpringBootApplication(
-        exclude = {
-                org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration.class
-        }
-)
+@SpringBootApplication
+@EnableJpaRepositories("com.cts.elearn.repository")
 public class UserServiceApplication {
 
     public static void main(String[] args) {

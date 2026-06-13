@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 @Configuration
-@Profile("prod")
 public class MailConfig {
     private static final Logger logger = LoggerFactory.getLogger(MailConfig.class);
 
