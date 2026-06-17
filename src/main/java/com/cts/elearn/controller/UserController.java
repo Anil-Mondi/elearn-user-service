@@ -71,7 +71,7 @@ public class UserController {
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getUsers(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(userService.getUsers(page, size));
+        return ResponseEntity.ok(userService.getUsers(page, size).getContent());
     }
     
     @PostMapping("/reset-password")

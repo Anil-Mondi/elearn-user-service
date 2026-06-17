@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -72,8 +75,12 @@ public class UserService {
         return mapToResponse(user);
     }
 
-    public List<User> getUsers(int page, int size) {
-        return userRepository.findAll();
+    public Page<User> getUsers(int page, int size)
+    {
+        Pageable pageable =
+                PageRequest.of(page,size);
+
+        return userRepository.findAll(pageable);
     }
 
     // UPDATE
