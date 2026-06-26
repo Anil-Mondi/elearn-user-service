@@ -2,6 +2,7 @@ package com.cts.elearn.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,13 +16,24 @@ public class SecurityConfig {
             throws Exception {
 
         http
+
+                // Enable CORS
+                .cors(Customizer.withDefaults())
+
+                // Disable CSRF
                 .csrf(csrf -> csrf.disable())
 
+                // H2 Console
                 .headers(headers ->
                         headers.frameOptions(
                                 frame -> frame.disable()))
 
                 .authorizeHttpRequests(auth -> auth
+
+                        // Allow browser preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public APIs
                         .requestMatchers(
                                 "/h2-console/**",
                                 "/users/**",
@@ -30,13 +42,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/actuator/**"
                         ).permitAll()
+
                         .anyRequest().authenticated()
                 )
 
-                .httpBasic(httpBasic -> {});
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

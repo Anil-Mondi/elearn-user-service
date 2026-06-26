@@ -1,6 +1,5 @@
 package com.cts.elearn.service;
 
-import java.util.List;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -35,7 +34,7 @@ public class UserService {
     // REGISTER
     public User registerUser(User user) {
 
-        // 🔐 Encode password
+        // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         User saved = userRepository.save(user);
@@ -53,12 +52,12 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("Invalid credentials"));
 
-        // 🔐 Match password
+        // Match password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new UserNotFoundException("Invalid credentials");
         }
 
-        // 🔑 Generate JWT
+        // Generate JWT
         String token = jwtUtil.generateToken(
                 user.getEmail(),           // subject
                 user.getRole()             // role (LEARNER / ADMIN)

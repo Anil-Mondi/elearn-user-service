@@ -22,16 +22,16 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
     public void publish(DomainEvent event) {
 
         if (event instanceof UserRegisteredEvent e) {
-            log.info("🔥 Publishing USER REGISTERED event to Kafka: {}", e);
+            log.info("Publishing USER REGISTERED event to Kafka: {}", e);
 
             kafkaTemplate
                 .send("user.registered", e.getEmail(), e)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
-                        log.error("❌ Kafka publish failed", ex);
+                        log.error("Kafka publish failed", ex);
                     } else {
                         log.info(
-                            "✅ Kafka publish success | topic={}, partition={}, offset={}",
+                            "Kafka publish success | topic={}, partition={}, offset={}",
                             result.getRecordMetadata().topic(),
                             result.getRecordMetadata().partition(),
                             result.getRecordMetadata().offset()
