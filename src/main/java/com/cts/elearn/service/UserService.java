@@ -74,6 +74,16 @@ public class UserService {
         return mapToResponse(user);
     }
 
+    public UserResponse getUserByEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        return mapToResponse(user);
+
+    }
+
     public Page<User> getUsers(int page, int size)
     {
         Pageable pageable =

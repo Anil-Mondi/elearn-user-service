@@ -12,28 +12,19 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-
-                // Enable CORS
                 .cors(Customizer.withDefaults())
-
-                // Disable CSRF
                 .csrf(csrf -> csrf.disable())
 
-                // H2 Console
                 .headers(headers ->
-                        headers.frameOptions(
-                                frame -> frame.disable()))
+                        headers.frameOptions(frame -> frame.disable()))
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Allow browser preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public APIs
                         .requestMatchers(
                                 "/h2-console/**",
                                 "/users/**",
@@ -55,4 +46,5 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

@@ -54,6 +54,14 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @GetMapping("/email/{email}")
+    public UserResponse getUserByEmail(
+            @PathVariable String email) {
+
+        return userService.getUserByEmail(email);
+
+    }
+
     @PutMapping("/update")
 //    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR', 'LEARNER')")
     public ResponseEntity<User> updateUser(@RequestBody User user) {
