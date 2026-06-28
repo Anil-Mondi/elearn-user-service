@@ -2,6 +2,7 @@ package com.cts.elearn.service;
 
 import java.util.UUID;
 
+import com.cts.elearn.exception.EmailAlreadyExistsException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,16 +35,35 @@ public class UserService {
     // REGISTER
     public User registerUser(User user) {
 
-        // Encode password
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (userRepository.existsByEmail(user.getEmail())) {
 
-        User saved = userRepository.save(user);
+            throw new EmailAlreadyExistsException(
+                    "Email already registered."
+            );
+
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword())
+        );
+
+        User saved =
+                userRepository.save(user);
 
         eventPublisher.publish(
-                new UserRegisteredEvent(saved.getId(), saved.getEmail())
+
+                new UserRegisteredEvent(
+
+                        saved.getId(),
+
+                        saved.getEmail()
+
+                )
+
         );
 
         return saved;
+
     }
 
     // LOGIN

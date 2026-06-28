@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.cts.elearn.dto.UserResponse;
 
-@FeignClient(name = "user-service", url = "http://localhost:8085")
+@FeignClient(name = "user-service", url = "https://elearn-user-service.onrender.com")
 public interface UserClient {
     @GetMapping("/users/{userId}")
     UserResponse getUserById(@PathVariable("userId") int userId);

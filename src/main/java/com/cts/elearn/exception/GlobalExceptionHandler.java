@@ -24,4 +24,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body("Invalid input: " + ex.getLocalizedMessage());
     }
 
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handleEmailAlreadyExists(
+            EmailAlreadyExistsException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
+
+    }
+
 }
