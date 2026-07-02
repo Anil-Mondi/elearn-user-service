@@ -87,5 +87,18 @@ public class UserController {
         return ResponseEntity.ok(userService.resetPassword(request));
     }
 
-    
+    @GetMapping("/active")
+    public ResponseEntity<List<UserResponse>> getActiveUsers() {
+        return ResponseEntity.ok(userService.getActiveUsers());
+    }
+
+    @GetMapping("/blocked")
+    public ResponseEntity<List<UserResponse>> getBlockedUsers(){
+        return ResponseEntity.ok(userService.getBlockedUsers());
+    }
+
+    @GetMapping("/learners")
+    public ResponseEntity<List<UserResponse>> getLearners(){
+        return ResponseEntity.ok(userService.getLearners());
+    }
 }

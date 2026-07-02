@@ -1,15 +1,5 @@
 package com.cts.elearn.service;
 
-import java.util.UUID;
-
-import com.cts.elearn.exception.EmailAlreadyExistsException;
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.cts.elearn.domain.event.PasswordResetRequestedEvent;
 import com.cts.elearn.domain.event.UserRegisteredEvent;
 import com.cts.elearn.dto.ForgotPasswordRequest;
@@ -18,9 +8,22 @@ import com.cts.elearn.dto.LoginResponse;
 import com.cts.elearn.dto.UserResponse;
 import com.cts.elearn.entity.User;
 import com.cts.elearn.event.DomainEventPublisher;
+import com.cts.elearn.exception.EmailAlreadyExistsException;
 import com.cts.elearn.exception.UserNotFoundException;
+import com.cts.elearn.mapper.UserResponseMapper;
 import com.cts.elearn.repository.UserRepository;
 import com.cts.elearn.security.JwtUtil;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -28,9 +31,15 @@ import com.cts.elearn.security.JwtUtil;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    @Autowired
+    private final UserResponseMapper userResponseMapper;
+
     private final DomainEventPublisher eventPublisher;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+
 
     // REGISTER
     public User registerUser(User user) {
@@ -91,7 +100,7 @@ public class UserService {
         User user = userRepository.findById((long) id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        return mapToResponse(user);
+        return userResponseMapper.mapToResponse(user);
     }
 
     public UserResponse getUserByEmail(String email) {
@@ -100,14 +109,13 @@ public class UserService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found"));
 
-        return mapToResponse(user);
+        return userResponseMapper.mapToResponse(user);
 
     }
 
-    public Page<User> getUsers(int page, int size)
-    {
+    public Page<User> getUsers(int page, int size) {
         Pageable pageable =
-                PageRequest.of(page,size);
+                PageRequest.of(page, size);
 
         return userRepository.findAll(pageable);
     }
@@ -139,13 +147,23 @@ public class UserService {
         return "Password reset link sent successfully";
     }
 
-    // MAPPER
-    private UserResponse mapToResponse(User user) {
-        return new UserResponse(
-                user.getId().intValue(),
-                user.getName(),
-                user.getContactNumber(),
-                user.getEmail()
-        );
+
+    public List<UserResponse> getActiveUsers() {
+        List<User> users = userRepository.findAll();
+
+        return users.stream().filter(user -> user.getStatus() == User.Status.Active)
+                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getBlockedUsers(){
+        List<User> users = userRepository.findAll();
+        return users.stream().filter(user -> user.getStatus() == User.Status.Blocked)
+                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getLearners(){
+        List<User> users = userRepository.findAll();
+        return users.stream().filter(user -> "Learner".equals(user.getRole()))
+                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
     }
 }
