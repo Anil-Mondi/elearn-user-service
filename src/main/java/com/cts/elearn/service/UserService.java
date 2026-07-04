@@ -2,10 +2,9 @@ package com.cts.elearn.service;
 
 import com.cts.elearn.domain.event.PasswordResetRequestedEvent;
 import com.cts.elearn.domain.event.UserRegisteredEvent;
-import com.cts.elearn.dto.ForgotPasswordRequest;
-import com.cts.elearn.dto.LoginRequest;
-import com.cts.elearn.dto.LoginResponse;
-import com.cts.elearn.dto.UserResponse;
+import com.cts.elearn.dto.*;
+import com.cts.elearn.entity.Role;
+import com.cts.elearn.entity.Status;
 import com.cts.elearn.entity.User;
 import com.cts.elearn.event.DomainEventPublisher;
 import com.cts.elearn.exception.EmailAlreadyExistsException;
@@ -13,130 +12,116 @@ import com.cts.elearn.exception.UserNotFoundException;
 import com.cts.elearn.mapper.UserResponseMapper;
 import com.cts.elearn.repository.UserRepository;
 import com.cts.elearn.security.JwtUtil;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
 
-    @Autowired
     private final UserResponseMapper userResponseMapper;
 
     private final DomainEventPublisher eventPublisher;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-
-
     // REGISTER
-    public User registerUser(User user) {
-
-        if (userRepository.existsByEmail(user.getEmail())) {
-
+    public UserResponse registerUser(RegisterUserRequest request) {
+        log.info("Register request received for email: {}", request.email());
+        if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(
-                    "Email already registered."
-            );
-
+                    request.email() + " already exists");
         }
 
+        User user = new User();
+
+        user.setName(request.name());
+        user.setEmail(request.email());
+        user.setContactNumber(request.contactNumber());
+        user.setRole(Role.LEARNER);
+        user.setStatus(Status.ACTIVE);
+
         user.setPassword(
-                passwordEncoder.encode(user.getPassword())
+                passwordEncoder.encode(request.password())
         );
 
-        User saved =
-                userRepository.save(user);
-
+        User saved = userRepository.save(user);
+        log.info("User created successfully with id {}", saved.getId());
         eventPublisher.publish(
-
                 new UserRegisteredEvent(
-
                         saved.getId(),
+                        saved.getEmail()));
 
-                        saved.getEmail()
-
-                )
-
-        );
-
-        return saved;
-
+        return userResponseMapper.mapToResponse(saved);
     }
 
     // LOGIN
     public LoginResponse loginUser(LoginRequest request) {
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("Invalid credentials"));
+        log.info("Login attempt for {}", request.email());
+        User user = getUserByEmailOrThrow(request.email());
 
         // Match password
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new UserNotFoundException("Invalid credentials");
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            log.warn("Invalid login for {}", request.email());
+            throw new UserNotFoundException("User not found");
         }
 
         // Generate JWT
         String token = jwtUtil.generateToken(
                 user.getEmail(),           // subject
-                user.getRole()             // role (LEARNER / ADMIN)
+                user.getRole().name()            // role (LEARNER / ADMIN)
         );
 
         return new LoginResponse(token, "ROLE_" + user.getRole(), user.getStatus().name());
     }
 
     // GET USER
-    public UserResponse getUserById(int id) {
-        User user = userRepository.findById((long) id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public UserResponse getUserById(Long id) {
+        User user = getUserByIdOrThrow(id);
 
         return userResponseMapper.mapToResponse(user);
     }
 
     public UserResponse getUserByEmail(String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UserNotFoundException("User not found"));
+        User user = getUserByEmailOrThrow(email);
 
         return userResponseMapper.mapToResponse(user);
 
     }
 
-    public Page<User> getUsers(int page, int size) {
-        Pageable pageable =
-                PageRequest.of(page, size);
+    public Page<UserResponse> getUsers(int page, int size) {
 
-        return userRepository.findAll(pageable);
+        return userRepository.findAll(PageRequest.of(page, size)).map(userResponseMapper::mapToResponse);
     }
 
     // UPDATE
-    public User updateUser(User user) {
-        return userRepository.save(user);
+    public UserResponse updateUser(User user) {
+
+        return userResponseMapper.mapToResponse(userRepository.save(user));
     }
 
     // DELETE
-    public void deleteUser(Integer id) {
-        userRepository.deleteById(id.longValue());
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 
     // RESET PASSWORD
     public String resetPassword(ForgotPasswordRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = getUserByEmailOrThrow(request.email());
 
-        String token = UUID.randomUUID().toString();
+        String token = generateResetToken();
         user.setResetToken(token);
         userRepository.save(user);
 
@@ -149,21 +134,45 @@ public class UserService {
 
 
     public List<UserResponse> getActiveUsers() {
-        List<User> users = userRepository.findAll();
-
-        return users.stream().filter(user -> user.getStatus() == User.Status.Active)
-                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
+        return userRepository.findByStatus(Status.ACTIVE)
+                .stream()
+                .map(userResponseMapper::mapToResponse)
+                .toList();
     }
 
     public List<UserResponse> getBlockedUsers(){
-        List<User> users = userRepository.findAll();
-        return users.stream().filter(user -> user.getStatus() == User.Status.Blocked)
-                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
+        return userRepository.findByStatus(Status.BLOCKED)
+                .stream()
+                .map(userResponseMapper::mapToResponse)
+                .toList();
     }
 
     public List<UserResponse> getLearners(){
-        List<User> users = userRepository.findAll();
-        return users.stream().filter(user -> "Learner".equals(user.getRole()))
-                .map(userResponseMapper::mapToResponse).collect(Collectors.toList());
+
+        return userRepository.findByRole(Role.LEARNER)
+                .stream()
+                .map(userResponseMapper::mapToResponse)
+                .toList();
+    }
+
+
+    //Helper methods
+    private User getUserByEmailOrThrow(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+    }
+
+    private User getUserByIdOrThrow(Long id){
+
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found : " + id));
+    }
+
+    private String generateResetToken() {
+        return UUID.randomUUID().toString();
     }
 }

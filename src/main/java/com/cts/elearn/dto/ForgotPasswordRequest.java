@@ -1,14 +1,13 @@
 package com.cts.elearn.dto;
 
-public class ForgotPasswordRequest {
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-    private String email;
+public record ForgotPasswordRequest(
 
-    public String getEmail() {
-        return email;
-    }
+        @NotBlank(message = "Email is required")
+        @Email(message = "Invalid email")
+        String email
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+) {
 }

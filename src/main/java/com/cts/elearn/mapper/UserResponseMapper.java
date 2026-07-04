@@ -9,7 +9,7 @@ public class UserResponseMapper {
     // MAPPER
     public UserResponse mapToResponse(User user) {
         return new UserResponse(
-                user.getId().intValue(),
+                user.getId(),
                 user.getName(),
                 user.getContactNumber(),
                 user.getEmail()
