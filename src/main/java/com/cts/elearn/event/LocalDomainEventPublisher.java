@@ -1,24 +1,24 @@
 package com.cts.elearn.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
+import com.cts.elearn.domain.event.DomainEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.cts.elearn.domain.event.DomainEvent;
-
+@Slf4j
 @Component
-@Primary
+@ConditionalOnProperty(
+        name = "event.publisher",
+        havingValue = "local",
+        matchIfMissing = true
+)
 public class LocalDomainEventPublisher implements DomainEventPublisher {
-
-    private static final Logger log =
-            LoggerFactory.getLogger(LocalDomainEventPublisher.class);
 
     @Override
     public void publish(DomainEvent event) {
 
-        log.info("EVENT RECEIVED LOCALLY : {}", event);
+        log.info("Publishing event locally: {}", event);
 
-        // Kafka disabled for now
+        // Kafka disabled
     }
 }

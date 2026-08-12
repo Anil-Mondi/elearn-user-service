@@ -1,15 +1,14 @@
 package com.cts.elearn.dto;
 
-import lombok.*;
+public record UserResponse(
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
-public class UserResponse {
-    private int userId;
-    private String name;
-    private String contactNumber;  // Ensure this field is present
-    private String email;
+        Long userId,
+
+        String name,
+
+        String contactNumber,
+
+        String email
+
+) {
 }

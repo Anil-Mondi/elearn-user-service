@@ -1,5 +1,7 @@
 package com.cts.elearn.config;
 
+import com.cts.elearn.entity.Role;
+import com.cts.elearn.entity.Status;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +28,8 @@ public class DataLoader {
                 admin.setContactNumber("9999999999");
                 admin.setPassword(
                         encoder.encode("admin123"));
-                admin.setRole("ADMIN");
-                admin.setStatus(User.Status.Active);
+                admin.setRole(Role.ADMIN);
+                admin.setStatus(Status.ACTIVE);
 
                 repo.save(admin);
 
@@ -37,8 +39,8 @@ public class DataLoader {
                 learner.setContactNumber("8888888888");
                 learner.setPassword(
                         encoder.encode("anil123"));
-                learner.setRole("LEARNER");
-                learner.setStatus(User.Status.Active);
+                learner.setRole(Role.LEARNER);
+                learner.setStatus(Status.ACTIVE);
 
                 repo.save(learner);
 
@@ -48,8 +50,8 @@ public class DataLoader {
                 instructor.setContactNumber("7777777777");
                 instructor.setPassword(
                         encoder.encode("instructor123"));
-                instructor.setRole("INSTRUCTOR");
-                instructor.setStatus(User.Status.Active);
+                instructor.setRole(Role.INSTRUCTOR);
+                instructor.setStatus(Status.ACTIVE);
 
                 repo.save(instructor);
             }

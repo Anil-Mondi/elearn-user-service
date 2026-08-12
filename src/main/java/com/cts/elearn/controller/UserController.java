@@ -1,35 +1,28 @@
 package com.cts.elearn.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.cts.elearn.dto.ForgotPasswordRequest;
-import com.cts.elearn.dto.LoginRequest;
-import com.cts.elearn.dto.LoginResponse;
-import com.cts.elearn.dto.UserResponse;
+import com.cts.elearn.common.response.ApiResponse;
+import com.cts.elearn.dto.*;
 import com.cts.elearn.entity.User;
 import com.cts.elearn.service.UserService;
-
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
+@Validated
 @RequestMapping("/users")
 @Tag(name = "User Management", description = "APIs for user operations")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
     
     @GetMapping("/test")
     public String test() {
@@ -37,55 +30,121 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
-    	if (user.getStatus() == null) {  // Ensure status is set
-            user.setStatus(User.Status.Active);
-        }
-        return ResponseEntity.status(201).body(userService.registerUser(user));
+    public ApiResponse<UserResponse> registerUser(
+            @Valid
+            @RequestBody RegisterUserRequest request) {
+
+        UserResponse response = userService.registerUser(request);
+
+        return new ApiResponse<>(
+                true,
+                "User registered successfully",
+                response,
+                LocalDateTime.now());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(userService.loginUser(loginRequest));
+    public ApiResponse<LoginResponse> loginUser(
+            @Valid
+            @RequestBody LoginRequest loginRequest) {
+        return new ApiResponse<>(
+                true,
+                "User logged in successfully",
+                userService.loginUser(loginRequest),
+                LocalDateTime.now());
     }
     
     @GetMapping("/{id}")   // This should match Feign Client path
-    public UserResponse getUserById(@PathVariable int id) {
-        return userService.getUserById(id);
+    public ApiResponse<UserResponse> getUserById(
+            @Positive
+            @PathVariable Long id) {
+
+        return new ApiResponse<>(
+                true,
+                "User found",
+                userService.getUserById(id),
+                LocalDateTime.now());
     }
 
     @GetMapping("/email/{email}")
-    public UserResponse getUserByEmail(
+    public ApiResponse<UserResponse> getUserByEmail(
             @PathVariable String email) {
 
-        return userService.getUserByEmail(email);
+        return new ApiResponse<>(
+                true,
+                "User found",
+                userService.getUserByEmail(email),
+                LocalDateTime.now());
 
     }
 
     @PutMapping("/update")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR', 'LEARNER')")
-    public ResponseEntity<User> updateUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(user));
+    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR', 'LEARNER')")
+    public ApiResponse<UserResponse> updateUser(@RequestBody User user) {
+        return new ApiResponse<>(
+                true,
+                "User updated successfully",
+                userService.updateUser(user),
+                LocalDateTime.now());
     }
 
     @DeleteMapping("/delete/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return new ApiResponse<>(
+                true,
+                "User deleted successfully",
+                null,
+                LocalDateTime.now());
     }
 
     @GetMapping("/getUsers")
-//    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getUsers(@RequestParam(defaultValue = "0") int page,
-                                               @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(userService.getUsers(page, size).getContent());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<UserResponse>> getUsers(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        return new ApiResponse<>(
+                true,
+                "Users retrieved successfully",
+                userService.getUsers(page, size).getContent(),
+                LocalDateTime.now());
     }
     
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ForgotPasswordRequest request) {
-        return ResponseEntity.ok(userService.resetPassword(request));
+    public ApiResponse<String> resetPassword(
+            @Valid
+            @RequestBody ForgotPasswordRequest request) {
+        return new ApiResponse<>(
+                true,
+                "Password reset successfully",
+                userService.resetPassword(request),
+                LocalDateTime.now());
     }
 
-    
+    @GetMapping("/active")
+    public ApiResponse<List<UserResponse>> getActiveUsers() {
+        return new ApiResponse<>(
+                true,
+                "Active users retrieved successfully",
+                userService.getActiveUsers(),
+                LocalDateTime.now());
+    }
+
+    @GetMapping("/blocked")
+    public ApiResponse<List<UserResponse>> getBlockedUsers(){
+        return new ApiResponse<>(
+                true,
+                "Blocked users retrieved successfully",
+                userService.getBlockedUsers(),
+                LocalDateTime.now());
+    }
+
+    @GetMapping("/learners")
+    public ApiResponse<List<UserResponse>> getLearners(){
+        return new ApiResponse<>(
+                true,
+                "Learners retrieved successfully",
+                userService.getLearners(),
+                LocalDateTime.now());
+    }
 }
